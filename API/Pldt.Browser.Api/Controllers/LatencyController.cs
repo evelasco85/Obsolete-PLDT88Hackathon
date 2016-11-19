@@ -98,14 +98,13 @@ namespace Pldt.Browser.Api.Controllers
         string GetLatencyStatus(decimal value)
         {
             string status = "Unknown";
-            decimal latencyValue = 0M;
 
             //https://forum.unity3d.com/threads/question-about-acceptable-levels-of-latency-in-online-gaming.261271/
-            if (latencyValue > 300)
+            if (value > 300)
                 status = "Bad";
-            else if (latencyValue > 170)
+            else if (value > 170)
                 status = "Slow";
-            else if (latencyValue > 80)
+            else if (value > 80)
                 status = "Average";
             else
                 status = "Good";
