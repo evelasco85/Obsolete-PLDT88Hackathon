@@ -132,75 +132,76 @@ namespace Pldt.Browser.Api.Controllers
                 throw;
             }
 
-            return paymentTokenId;
+            return hash;
         }
 
-        [HttpPost]
-        public string VaultCard(string customer_id, string paymentTokenId)
-        {
-            var cardVault = new
-            {
-                paymentTokenId,
-                isDefault = true,
-                redirectUrl = new
-                {
-                    success = "http://shop.server.com/success?id=123",
-                    failure = "http://shop.server.com/failure?id=123",
-                    cancel = "http://shop.server.com/cancel?id=123"
-                }
-            };
+        //[HttpPost]
+        //public string VaultCard(string customer_id, string paymentTokenId)
+        //{
+        //    var cardVault = new
+        //    {
+        //        paymentTokenId,
+        //        isDefault = true,
+        //        redirectUrl = new
+        //        {
+        //            success = "http://shop.server.com/success?id=123",
+        //            failure = "http://shop.server.com/failure?id=123",
+        //            cancel = "http://shop.server.com/cancel?id=123"
+        //        }
+        //    };
 
-            CardRecord cardEntry = _repository.Entities.CardRecords
-                .Where(card => card.paymentTokenId == paymentTokenId)
-                .FirstOrDefault();
+        //    CardRecord cardEntry = _repository.Entities.CardRecords
+        //        .Where(card => card.paymentTokenId == paymentTokenId)
+        //        .FirstOrDefault();
 
-            if ((cardEntry != null) && (!string.IsNullOrEmpty(cardEntry.cardTokenId)))
-                return cardEntry.cardTokenId;
+        //    if ((cardEntry != null) && (!string.IsNullOrEmpty(cardEntry.cardTokenId)))
+        //        return cardEntry.cardTokenId;
 
-            string hashNumber = cardEntry.hashNumber;
-            string jsonInput = new JavaScriptSerializer().Serialize(cardVault);
-            string jsonOutput = PayMayaGateway
-                   .GetInstance()
-                   .SendRequest(_secretKey,
-                   string.Format(_cardVaultingUrl, customer_id),
-                   jsonInput);
+        //    string hashNumber = cardEntry.hashNumber;
+        //    string jsonInput = new JavaScriptSerializer().Serialize(cardVault);
+        //    string jsonOutput = PayMayaGateway
+        //           .GetInstance()
+        //           .SendRequest(_secretKey,
+        //           string.Format(_cardVaultingUrl, customer_id),
+        //           jsonInput);
 
-            CardRecord matchedCard = _repository.Entities.CardRecords.Find(hashNumber);
+        //    CardRecord matchedCard = _repository.Entities.CardRecords.Find(hashNumber);
 
-            try
-            {
-                if(matchedCard != null)
-                {
-                    matchedCard.cardTokenId = PaymentService.GetInstance().GetCardTokenId(jsonOutput);
-                    _repository.Entities.SaveChanges();
-                }
+        //    try
+        //    {
+        //        if(matchedCard != null)
+        //        {
+        //            matchedCard.cardTokenId = PaymentService.GetInstance().GetCardTokenId(jsonOutput);
+        //            _repository.Entities.SaveChanges();
+        //        }
                 
-            }
-            catch
-            {
-                throw;
-            }
+        //    }
+        //    catch
+        //    {
+        //        throw;
+        //    }
 
-            return paymentTokenId;
-        }
+        //    return paymentTokenId;
+        //}
 
-        [HttpGet]
-        public string GetCards(string customer_id)
-        {
-            string jsonOutput = PayMayaGateway
-                   .GetInstance()
-                   .GetData(_secretKey,
-                   string.Format(_cardVaultingUrl, customer_id));
+        //[HttpGet]
+        //public string GetCards(string customer_id)
+        //{
+        //    string jsonOutput = PayMayaGateway
+        //           .GetInstance()
+        //           .GetData(_secretKey,
+        //           string.Format(_cardVaultingUrl, customer_id));
 
-            return jsonOutput;
-        }
+        //    return jsonOutput;
+        //}
 
         [HttpPost]
-        public string CreatePayment(string customer_id, string paymentTokenId,
+        public string CreatePayment(string customer_id, string cardHash,
             decimal amount, string currency
             )
         {
             CustomerRecord customerEntry = _repository.Entities.CustomerRecords.Where(customer => customer.id == customer_id).FirstOrDefault();
+            CardRecord cardEntry = _repository.Entities.CardRecords.Where(card => card.hashNumber == cardHash).FirstOrDefault();
             string jsonData = ((customerEntry != null) && (!string.IsNullOrEmpty(customerEntry.jsonData))) ? customerEntry.jsonData : string.Empty;
             JObject json = JObject.Parse(jsonData);
 
@@ -215,7 +216,7 @@ namespace Pldt.Browser.Api.Controllers
 
             var payment = new
             {
-                paymentTokenId,
+                paymentTokenId = (cardEntry != null) ? cardEntry.paymentTokenId : string.Empty,
                 totalAmount = new
                 {
                     amount,
