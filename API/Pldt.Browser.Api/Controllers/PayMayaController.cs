@@ -1,4 +1,6 @@
-﻿using Pldt.Browser.Api.Database;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using Pldt.Browser.Api.Database;
 using Pldt.Browser.Api.Infrastructure;
 using Pldt.Browser.Api.Services;
 using System;
@@ -22,7 +24,7 @@ namespace Pldt.Browser.Api.Controllers
         string _customerCreationUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers";
         string _cardCreationUrl = "https://pg-sandbox.paymaya.com/payments/v1/payment-tokens";
         string _cardVaultingUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers/{0}/cards";
-        string _paymentCreationgUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers/{0}/cards/{1}/payments";
+        string _paymentCreationgUrl = "https://pg-sandbox.paymaya.com/payments/v1/payments";
 
 
         IEFRepository _repository;
@@ -194,24 +196,39 @@ namespace Pldt.Browser.Api.Controllers
         }
 
         [HttpPost]
-        public string CreatePayment(string customer_id, string card_id,
-            string amount, string currency
+        public string CreatePayment(string customer_id, string paymentTokenId,
+            decimal amount, string currency
             )
         {
-            var amountDetail = new
+            CustomerRecord customerEntry = _repository.Entities.CustomerRecords.Where(customer => customer.id == customer_id).FirstOrDefault();
+            string jsonData = ((customerEntry != null) && (!string.IsNullOrEmpty(customerEntry.jsonData))) ? customerEntry.jsonData : string.Empty;
+            JObject json = JObject.Parse(jsonData);
+
+            if(!string.IsNullOrEmpty(jsonData))
             {
+                json.Property("id").Remove();
+                json.Property("sex").Remove();
+                json.Property("birthday").Remove();
+                json.Property("createdAt").Remove();
+                json.Property("updatedAt").Remove();
+            }
+
+            var payment = new
+            {
+                paymentTokenId,
                 totalAmount = new
                 {
                     amount,
                     currency
-                }
+                },
+                buyer = (new JavaScriptSerializer()).Deserialize< object>(json.ToString())
             };
 
-            string jsonInput = new JavaScriptSerializer().Serialize(amountDetail);
+            string jsonInput = new JavaScriptSerializer().Serialize(payment);
             string jsonOutput = PayMayaGateway
                    .GetInstance()
                    .SendRequest(_secretKey,
-                   string.Format(_paymentCreationgUrl, customer_id, card_id),
+                   _paymentCreationgUrl,
                    jsonInput);
 
             string paymentStatus = PaymentService.GetInstance().GetPaymentStatus(jsonOutput);
