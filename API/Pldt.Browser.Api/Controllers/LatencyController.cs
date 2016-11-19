@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web.Http;
 using System.Web.Http.Results;
@@ -51,7 +52,38 @@ namespace Pldt.Browser.Api.Controllers
                        };
                    })
                    .ToList();
-                
+
+                latency.Status = latency
+                    .Statistics
+                    .Where(field => (field != null) && (!string.IsNullOrEmpty(field.Name)) && (field.Name.ToLower().Contains("avg")))
+                    .DefaultIfEmpty(new StatisticField { Name = "", Value = "" })
+                    .Select(field =>
+                    {
+                        string valueString = field.Value.Trim();
+
+                        if (string.IsNullOrEmpty(valueString))
+                            return "Unknown";
+
+                        valueString = Regex.Replace(valueString, "[^0-9.]", "");
+
+                        string status = "Unknown";
+                        decimal latencyValue = 0M;
+
+                        if (!decimal.TryParse(valueString, out latencyValue))
+                            return status;
+
+                        if (latencyValue > 300)
+                            status = "Bad";
+                        else if (latencyValue > 170)
+                            status = "Slow";
+                        else if (latencyValue > 80)
+                            status = "Average";
+                        else
+                            status = "Good";
+
+                        return status;
+                    })
+                    .FirstOrDefault();
             }
 
             return Json(latency);
