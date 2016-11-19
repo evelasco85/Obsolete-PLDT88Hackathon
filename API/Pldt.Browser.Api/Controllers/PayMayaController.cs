@@ -1,4 +1,5 @@
 ﻿using Pldt.Browser.Api.Database;
+using Pldt.Browser.Api.Infrastructure;
 using Pldt.Browser.Api.Services;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,10 @@ namespace Pldt.Browser.Api.Controllers
     public class PayMayaController : ApiController
     {
 
-        string _url = "https://pg-sandbox.paymaya.com/payments/v1/customers";
+        string _customerUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers";
+        string _cardUrl = "https://pg-sandbox.paymaya.com/payments/v1/payment-tokens";
+        string _secretKey = "sk-oF33wv5pXp7gvIpHLvCjoNKW2BL48ZxPY6H2Lc8v5mD";
+        string _publicKey = "pk-zkronn6BaMpTDvkO2aBGJAZzSmKkz3K6k8t9cDSbwwl";
 
         IEFRepository _repository;
 
@@ -23,7 +27,6 @@ namespace Pldt.Browser.Api.Controllers
         {
             _repository = repository;
         }
-
 
         [HttpPost]
         public string CreateCustomer(
@@ -60,46 +63,62 @@ namespace Pldt.Browser.Api.Controllers
             if (_repository.Entities.CustomerRecords.Any(customer => customer.email == email))
                 return _repository.Entities.CustomerRecords.Where(customer => customer.email == email).FirstOrDefault().id;
 
-                string jsonInput = new JavaScriptSerializer().Serialize(customerData);
-            string jsonOutput = string.Empty;
-            string basicAuth = string.Format(
-                "Basic {0}",
-                Convert.ToBase64String(Encoding.Default.GetBytes("sk-oF33wv5pXp7gvIpHLvCjoNKW2BL48ZxPY6H2Lc8v5mD" + ":")));
+            string jsonInput = new JavaScriptSerializer().Serialize(customerData);
+            string jsonOutput = PayMayaGateway
+                   .GetInstance()
+                   .SendRequest(_secretKey, _customerUrl, jsonInput);
+            string id = CustomerService.GetInstance().GetCustomerId(jsonOutput);
 
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            _repository.Entities.CustomerRecords.Add(new CustomerRecord
+            {
+                id = id,
+                jsonData = jsonOutput,
+                email = email
+            });
+
+            _repository.Entities.SaveChanges();
+
+            return id;
+        }
+
+        [HttpPost]
+        public string RegisterCreditCard(string customerId,
+            string cardNumber,
+            string expirationMonth, string expirationYear,
+            string cvc)
+        {
+            var cardData = new
+            {
+                card = new
+                {
+                    number = cardNumber,
+                    expMonth = expirationMonth,
+                    expYear = expirationYear,
+                    cvc
+                }
+            };
+
+            string hash = PayMayaGateway
+                .GetInstance()
+                .HashGenerator(cardNumber);
+
+            if (_repository.Entities.CardRecords.Any(card => card.hashNumber == hash))
+                return _repository.Entities.CardRecords.Where(card => card.hashNumber == hash).FirstOrDefault().paymentTokenId;
+
+            string jsonInput = new JavaScriptSerializer().Serialize(cardData);
+            string jsonOutput = PayMayaGateway
+                   .GetInstance()
+                   .SendRequest(_publicKey, _cardUrl, jsonInput);
+            string paymentTokenId = PaymentService.GetInstance().GetPaymentTokenId(jsonOutput);
+
+            _repository.Entities.CardRecords.Add(new CardRecord
+            {
+                paymentTokenId = paymentTokenId,
+                hashNumber = hash
+            });
 
             try
             {
-                WebRequest request = WebRequest.Create(_url);
-                ASCIIEncoding encoding = new ASCIIEncoding();
-                byte[] bodyByte = Encoding.UTF8.GetBytes(jsonInput);
-
-                request.Method = "POST";
-                request.ContentType = "application/json;";
-                request.ContentLength = bodyByte.Length;
-                request.Headers["Authorization"] = basicAuth;
-
-                using (Stream dataStream = request.GetRequestStream())
-                {
-                    dataStream.Write(bodyByte, 0, bodyByte.Length);
-                }
-
-                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-                using (StreamReader reader = new StreamReader(response.GetResponseStream()))
-                {
-                    jsonOutput = reader.ReadToEnd();
-                }
-
-                string id = CustomerService.GetInstance().GetCustomerId(jsonOutput);
-
-                _repository.Entities.CustomerRecords.Add(new CustomerRecord
-                {
-                    id = id,
-                    jsonData = jsonOutput,
-                    email = email
-                });
-
                 _repository.Entities.SaveChanges();
             }
             catch
@@ -107,7 +126,7 @@ namespace Pldt.Browser.Api.Controllers
                 throw;
             }
 
-            return jsonOutput;
+            return paymentTokenId;
         }
     }
 }

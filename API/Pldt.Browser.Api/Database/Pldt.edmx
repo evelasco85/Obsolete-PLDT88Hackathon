@@ -5,6 +5,13 @@
     <!-- SSDL content -->
     <edmx:StorageModels>
     <Schema Namespace="Pldt88HackModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+        <EntityType Name="CardRecord">
+          <Key>
+            <PropertyRef Name="hashNumber" />
+          </Key>
+          <Property Name="hashNumber" Type="nvarchar" MaxLength="50" Nullable="false" />
+          <Property Name="paymentTokenId" Type="nvarchar" MaxLength="255" Nullable="false" />
+        </EntityType>
         <EntityType Name="CustomerRecord">
           <Key>
             <PropertyRef Name="email" />
@@ -14,6 +21,7 @@
           <Property Name="jsonData" Type="ntext" />
         </EntityType>
         <EntityContainer Name="Pldt88HackModelStoreContainer">
+          <EntitySet Name="CardRecord" EntityType="Self.CardRecord" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="CustomerRecord" EntityType="Self.CustomerRecord" Schema="dbo" store:Type="Tables" />
         </EntityContainer>
       </Schema></edmx:StorageModels>
@@ -22,6 +30,7 @@
       <Schema Namespace="Pldt88HackModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
         <EntityContainer Name="Pldt88HackEntities" annotation:LazyLoadingEnabled="true" >
           <EntitySet Name="CustomerRecords" EntityType="Pldt88HackModel.CustomerRecord" />
+          <EntitySet Name="CardRecords" EntityType="Pldt88HackModel.CardRecord" />
         </EntityContainer>
         <EntityType Name="CustomerRecord">
           <Key>
@@ -30,6 +39,13 @@
           <Property Name="id" Type="String" MaxLength="255" FixedLength="false" Unicode="true" />
           <Property Name="email" Type="String" Nullable="false" MaxLength="100" FixedLength="false" Unicode="true" />
           <Property Name="jsonData" Type="String" MaxLength="Max" FixedLength="false" Unicode="true" />
+        </EntityType>
+        <EntityType Name="CardRecord">
+          <Key>
+            <PropertyRef Name="hashNumber" />
+          </Key>
+          <Property Name="hashNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
+          <Property Name="paymentTokenId" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
         </EntityType>
       </Schema>
     </edmx:ConceptualModels>
@@ -43,6 +59,14 @@
                 <ScalarProperty Name="jsonData" ColumnName="jsonData" />
                 <ScalarProperty Name="email" ColumnName="email" />
                 <ScalarProperty Name="id" ColumnName="id" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
+          <EntitySetMapping Name="CardRecords">
+            <EntityTypeMapping TypeName="Pldt88HackModel.CardRecord">
+              <MappingFragment StoreEntitySet="CardRecord">
+                <ScalarProperty Name="paymentTokenId" ColumnName="paymentTokenId" />
+                <ScalarProperty Name="hashNumber" ColumnName="hashNumber" />
               </MappingFragment>
             </EntityTypeMapping>
           </EntitySetMapping>

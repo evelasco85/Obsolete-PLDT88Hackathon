@@ -11,6 +11,7 @@ namespace Pldt.Browser.Api.Services
         XmlNode GetNode(XmlDocument document, string xpath);
         string GetNodeValue(XmlNode node);
         string GetNodeValue(XmlDocument document, string xpath);
+        string ConstructRelativeXPath(string field);
     }
 
     public class XMLService : IXMLService
@@ -42,6 +43,14 @@ namespace Pldt.Browser.Api.Services
                 return null;
 
             return document.SelectSingleNode(xpath);
+        }
+
+        public string ConstructRelativeXPath(string field)
+        {
+            if (string.IsNullOrEmpty(field))
+                return string.Empty;
+
+            return string.Format("{0}/{1}", "Root", field);
         }
     }
 }

@@ -26,5 +26,6 @@ namespace Pldt.Browser.Api.Database
         }
     
         public virtual DbSet<CustomerRecord> CustomerRecords { get; set; }
+        public virtual DbSet<CardRecord> CardRecords { get; set; }
     }
 }

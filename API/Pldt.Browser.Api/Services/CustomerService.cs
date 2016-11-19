@@ -32,7 +32,7 @@ namespace Pldt.Browser.Api.Services
             string id = string.Empty;
             XmlDocument doc = JsonConvert.DeserializeXmlNode(json, "Root");
 
-            id = XMLService.GetInstance().GetNodeValue(doc, ConstructRelativeXPath("id"));
+            id = XMLService.GetInstance().GetNodeValue(doc, XMLService.GetInstance().ConstructRelativeXPath("id"));
 
             return id;
         }
@@ -41,17 +41,9 @@ namespace Pldt.Browser.Api.Services
             string id = string.Empty;
             XmlDocument doc = JsonConvert.DeserializeXmlNode(json, "Root");
 
-            id = XMLService.GetInstance().GetNodeValue(doc, ConstructRelativeXPath("id"));
+            id = XMLService.GetInstance().GetNodeValue(doc, XMLService.GetInstance().ConstructRelativeXPath("id"));
 
             return id;
-        }
-
-        string ConstructRelativeXPath(string field)
-        {
-            if (string.IsNullOrEmpty(field))
-                return string.Empty;
-
-            return string.Format("{0}/{1}", "Root", field);
-        }
+        }        
     }
 }

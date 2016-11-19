@@ -206,6 +206,9 @@
     <Compile Include="Controllers\LatencyController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\PayMayaController.cs" />
+    <Compile Include="Database\CardRecord.cs">
+      <DependentUpon>Pldt.tt</DependentUpon>
+    </Compile>
     <Compile Include="Database\CustomerRecord.cs">
       <DependentUpon>Pldt.tt</DependentUpon>
     </Compile>
@@ -229,12 +232,14 @@
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
     <Compile Include="Infrastructure\NinjectControllerFactory.cs" />
+    <Compile Include="Infrastructure\PayMayaGateway.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\IdentityModels.cs" />
     <Compile Include="Models\LatencyViewModel.cs" />
     <Compile Include="Models\ManageViewModels.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\CustomerService.cs" />
+    <Compile Include="Services\PaymentService.cs" />
     <Compile Include="Services\XMLService.cs" />
     <Compile Include="SignalR\PayMayaHub.cs" />
     <Compile Include="Startup.cs" />
