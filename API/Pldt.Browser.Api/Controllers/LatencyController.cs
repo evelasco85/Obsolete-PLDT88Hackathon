@@ -20,73 +20,84 @@ namespace Pldt.Browser.Api.Controllers
             LatencyViewModel latency = new LatencyViewModel();
 
             latency.UrlOrIp = urlOrIp;
+            latency.Status = "Unknown";
+
             string latencyApiTester = string.Format("http://api.hackertarget.com/nping/?q={0}", urlOrIp);
-            WebRequest request = WebRequest.Create(latencyApiTester);
-            HttpWebResponse response = (HttpWebResponse)request.GetResponse();
-
-            using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+            
+            try
             {
-                string responseFromServer = reader.ReadToEnd();
+                WebRequest request = WebRequest.Create(latencyApiTester);
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 
-                IList<string> lineItems = responseFromServer
-                    .Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
-                    .ToList();
+                using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                {
+                    string responseFromServer = reader.ReadToEnd();
 
-                latency.Statistics = lineItems
-                    .Where(line =>
-                        !string.IsNullOrEmpty(line) &&
-                        line.ToLower().Contains("max rtt:")
-                    )
-                   .SelectMany(line => line.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
-                   .Select(latencyEntry =>
-                   {
-                       string[] segments = latencyEntry.Split(":".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
+                    IList<string> lineItems = responseFromServer
+                        .Split(Environment.NewLine.ToCharArray(), StringSplitOptions.RemoveEmptyEntries)
+                        .ToList();
 
-                       if ((segments != null) && (segments.Count() < 2))
-                           return new StatisticField();
-
-                       return new StatisticField
+                    latency.Statistics = lineItems
+                        .Where(line =>
+                            !string.IsNullOrEmpty(line) &&
+                            line.ToLower().Contains("max rtt:")
+                        )
+                       .SelectMany(line => line.Split("|".ToCharArray(), StringSplitOptions.RemoveEmptyEntries))
+                       .Select(latencyEntry =>
                        {
-                           Name = segments[0],
-                           Value = segments[1]
-                       };
-                   })
-                   .ToList();
+                           string[] segments = latencyEntry.Split(":".ToCharArray(), StringSplitOptions.RemoveEmptyEntries);
 
-                latency.Status = latency
-                    .Statistics
-                    .Where(field => (field != null) && (!string.IsNullOrEmpty(field.Name)) && (field.Name.ToLower().Contains("avg")))
-                    .DefaultIfEmpty(new StatisticField { Name = "", Value = "" })
-                    .Select(field =>
-                    {
-                        string valueString = field.Value.Trim();
+                           if ((segments != null) && (segments.Count() < 2))
+                               return new StatisticField();
 
-                        if (string.IsNullOrEmpty(valueString))
-                            return "Unknown";
+                           return new StatisticField
+                           {
+                               Name = segments[0],
+                               Value = segments[1]
+                           };
+                       })
+                       .ToList();
 
-                        valueString = Regex.Replace(valueString, "[^0-9.]", "");
+                    latency.Status = latency
+                        .Statistics
+                        .Where(field => (field != null) && (!string.IsNullOrEmpty(field.Name)) && (field.Name.ToLower().Contains("avg")))
+                        .DefaultIfEmpty(new StatisticField { Name = "", Value = "" })
+                        .Select(field =>
+                        {
+                            string valueString = field.Value.Trim();
 
-                        string status = "Unknown";
-                        decimal latencyValue = 0M;
+                            if (string.IsNullOrEmpty(valueString))
+                                return "Unknown";
 
-                        if (!decimal.TryParse(valueString, out latencyValue))
+                            valueString = Regex.Replace(valueString, "[^0-9.]", "");
+
+                            string status = "Unknown";
+                            decimal latencyValue = 0M;
+
+                            if (!decimal.TryParse(valueString, out latencyValue))
+                                return status;
+
+                            //https://forum.unity3d.com/threads/question-about-acceptable-levels-of-latency-in-online-gaming.261271/
+                            if (latencyValue > 300)
+                                status = "Bad";
+                            else if (latencyValue > 170)
+                                status = "Slow";
+                            else if (latencyValue > 80)
+                                status = "Average";
+                            else
+                                status = "Good";
+
                             return status;
-
-                        if (latencyValue > 300)
-                            status = "Bad";
-                        else if (latencyValue > 170)
-                            status = "Slow";
-                        else if (latencyValue > 80)
-                            status = "Average";
-                        else
-                            status = "Good";
-
-                        return status;
-                    })
-                    .FirstOrDefault();
+                        })
+                        .FirstOrDefault();
+                }
+            }
+            catch
+            {
+               
             }
 
-            return Json(latency);
+            return  Json(latency);
         }
     }
 }

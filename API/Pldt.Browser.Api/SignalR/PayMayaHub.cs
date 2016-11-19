@@ -8,5 +8,9 @@ namespace Pldt.Browser.Api.SignalR
 {
     public class PayMayaHub : Hub
     {
+        public void Register()
+        {
+            //Context.ConnectionId
+        }
     }
 }
