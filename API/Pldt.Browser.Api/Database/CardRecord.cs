@@ -16,5 +16,6 @@ namespace Pldt.Browser.Api.Database
     {
         public string hashNumber { get; set; }
         public string paymentTokenId { get; set; }
+        public string cardTokenId { get; set; }
     }
 }

@@ -10,6 +10,8 @@ namespace Pldt.Browser.Api.Services
     public interface IPaymentService
     {
         string GetPaymentTokenId(string json);
+        string GetCardTokenId(string json);
+        string GetPaymentStatus(string json);
     }
 
     public class PaymentService : IPaymentService
@@ -32,6 +34,26 @@ namespace Pldt.Browser.Api.Services
             XmlDocument doc = JsonConvert.DeserializeXmlNode(json, "Root");
 
             id = XMLService.GetInstance().GetNodeValue(doc, XMLService.GetInstance().ConstructRelativeXPath("paymentTokenId"));
+
+            return id;
+        }
+
+        public string GetCardTokenId(string json)
+        {
+            string id = string.Empty;
+            XmlDocument doc = JsonConvert.DeserializeXmlNode(json, "Root");
+
+            id = XMLService.GetInstance().GetNodeValue(doc, XMLService.GetInstance().ConstructRelativeXPath("cardTokenId"));
+
+            return id;
+        }
+
+        public string GetPaymentStatus(string json)
+        {
+            string id = string.Empty;
+            XmlDocument doc = JsonConvert.DeserializeXmlNode(json, "Root");
+
+            id = XMLService.GetInstance().GetNodeValue(doc, XMLService.GetInstance().ConstructRelativeXPath("status"));
 
             return id;
         }

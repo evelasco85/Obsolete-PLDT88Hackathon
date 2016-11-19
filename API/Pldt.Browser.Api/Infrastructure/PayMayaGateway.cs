@@ -13,6 +13,7 @@ namespace Pldt.Browser.Api.Infrastructure
         string GenerateAuthValue(string key);
         string SendRequest(string key, string url, string jsonInput);
         string HashGenerator(string value);
+        string GetData(string key, string url);        
     }
 
     public class PayMayaGateway : IPayMayaGateway
@@ -64,6 +65,36 @@ namespace Pldt.Browser.Api.Infrastructure
                 {
                     dataStream.Write(bodyByte, 0, bodyByte.Length);
                 }
+
+                HttpWebResponse response = (HttpWebResponse)request.GetResponse();
+
+                using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+                {
+                    jsonOutput = reader.ReadToEnd();
+                }
+            }
+            catch
+            {
+                throw;
+            }
+
+            return jsonOutput;
+        }
+
+        public string GetData(string key, string url)
+        {
+            string jsonOutput = string.Empty;
+
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+
+            try
+            {
+                WebRequest request = WebRequest.Create(url);
+                ASCIIEncoding encoding = new ASCIIEncoding();
+
+                request.Method = "GET";
+                request.ContentType = "application/json;";
+                request.Headers["Authorization"] = GenerateAuthValue(key);
 
                 HttpWebResponse response = (HttpWebResponse)request.GetResponse();
 

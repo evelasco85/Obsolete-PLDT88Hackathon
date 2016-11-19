@@ -15,11 +15,15 @@ namespace Pldt.Browser.Api.Controllers
 {
     public class PayMayaController : ApiController
     {
-
-        string _customerUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers";
-        string _cardUrl = "https://pg-sandbox.paymaya.com/payments/v1/payment-tokens";
         string _secretKey = "sk-oF33wv5pXp7gvIpHLvCjoNKW2BL48ZxPY6H2Lc8v5mD";
         string _publicKey = "pk-zkronn6BaMpTDvkO2aBGJAZzSmKkz3K6k8t9cDSbwwl";
+
+
+        string _customerCreationUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers";
+        string _cardCreationUrl = "https://pg-sandbox.paymaya.com/payments/v1/payment-tokens";
+        string _cardVaultingUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers/{0}/cards";
+        string _paymentCreationgUrl = "https://pg-sandbox.paymaya.com/payments/v1/customers/{0}/cards/{1}/payments";
+
 
         IEFRepository _repository;
 
@@ -66,7 +70,7 @@ namespace Pldt.Browser.Api.Controllers
             string jsonInput = new JavaScriptSerializer().Serialize(customerData);
             string jsonOutput = PayMayaGateway
                    .GetInstance()
-                   .SendRequest(_secretKey, _customerUrl, jsonInput);
+                   .SendRequest(_secretKey, _customerCreationUrl, jsonInput);
             string id = CustomerService.GetInstance().GetCustomerId(jsonOutput);
 
             _repository.Entities.CustomerRecords.Add(new CustomerRecord
@@ -82,7 +86,7 @@ namespace Pldt.Browser.Api.Controllers
         }
 
         [HttpPost]
-        public string RegisterCreditCard(string customerId,
+        public string RegisterCard(string customerId,
             string cardNumber,
             string expirationMonth, string expirationYear,
             string cvc)
@@ -108,7 +112,7 @@ namespace Pldt.Browser.Api.Controllers
             string jsonInput = new JavaScriptSerializer().Serialize(cardData);
             string jsonOutput = PayMayaGateway
                    .GetInstance()
-                   .SendRequest(_publicKey, _cardUrl, jsonInput);
+                   .SendRequest(_publicKey, _cardCreationUrl, jsonInput);
             string paymentTokenId = PaymentService.GetInstance().GetPaymentTokenId(jsonOutput);
 
             _repository.Entities.CardRecords.Add(new CardRecord
@@ -127,6 +131,92 @@ namespace Pldt.Browser.Api.Controllers
             }
 
             return paymentTokenId;
+        }
+
+        [HttpPost]
+        public string VaultCard(string customer_id, string paymentTokenId)
+        {
+            var cardVault = new
+            {
+                paymentTokenId,
+                isDefault = true,
+                redirectUrl = new
+                {
+                    success = "http://shop.server.com/success?id=123",
+                    failure = "http://shop.server.com/failure?id=123",
+                    cancel = "http://shop.server.com/cancel?id=123"
+                }
+            };
+
+            CardRecord cardEntry = _repository.Entities.CardRecords
+                .Where(card => card.paymentTokenId == paymentTokenId)
+                .FirstOrDefault();
+
+            if ((cardEntry != null) && (!string.IsNullOrEmpty(cardEntry.cardTokenId)))
+                return cardEntry.cardTokenId;
+
+            string hashNumber = cardEntry.hashNumber;
+            string jsonInput = new JavaScriptSerializer().Serialize(cardVault);
+            string jsonOutput = PayMayaGateway
+                   .GetInstance()
+                   .SendRequest(_secretKey,
+                   string.Format(_cardVaultingUrl, customer_id),
+                   jsonInput);
+
+            CardRecord matchedCard = _repository.Entities.CardRecords.Find(hashNumber);
+
+            try
+            {
+                if(matchedCard != null)
+                {
+                    matchedCard.cardTokenId = PaymentService.GetInstance().GetCardTokenId(jsonOutput);
+                    _repository.Entities.SaveChanges();
+                }
+                
+            }
+            catch
+            {
+                throw;
+            }
+
+            return paymentTokenId;
+        }
+
+        [HttpGet]
+        public string GetCards(string customer_id)
+        {
+            string jsonOutput = PayMayaGateway
+                   .GetInstance()
+                   .GetData(_secretKey,
+                   string.Format(_cardVaultingUrl, customer_id));
+
+            return jsonOutput;
+        }
+
+        [HttpPost]
+        public string CreatePayment(string customer_id, string card_id,
+            string amount, string currency
+            )
+        {
+            var amountDetail = new
+            {
+                totalAmount = new
+                {
+                    amount,
+                    currency
+                }
+            };
+
+            string jsonInput = new JavaScriptSerializer().Serialize(amountDetail);
+            string jsonOutput = PayMayaGateway
+                   .GetInstance()
+                   .SendRequest(_secretKey,
+                   string.Format(_paymentCreationgUrl, customer_id, card_id),
+                   jsonInput);
+
+            string paymentStatus = PaymentService.GetInstance().GetPaymentStatus(jsonOutput);
+
+            return paymentStatus;
         }
     }
 }

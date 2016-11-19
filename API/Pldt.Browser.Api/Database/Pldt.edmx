@@ -11,6 +11,7 @@
           </Key>
           <Property Name="hashNumber" Type="nvarchar" MaxLength="50" Nullable="false" />
           <Property Name="paymentTokenId" Type="nvarchar" MaxLength="255" Nullable="false" />
+          <Property Name="cardTokenId" Type="nvarchar" MaxLength="50" />
         </EntityType>
         <EntityType Name="CustomerRecord">
           <Key>
@@ -46,6 +47,7 @@
           </Key>
           <Property Name="hashNumber" Type="String" Nullable="false" MaxLength="50" FixedLength="false" Unicode="true" />
           <Property Name="paymentTokenId" Type="String" Nullable="false" MaxLength="255" FixedLength="false" Unicode="true" />
+          <Property Name="cardTokenId" Type="String" MaxLength="50" FixedLength="false" Unicode="true" />
         </EntityType>
       </Schema>
     </edmx:ConceptualModels>
@@ -65,6 +67,7 @@
           <EntitySetMapping Name="CardRecords">
             <EntityTypeMapping TypeName="Pldt88HackModel.CardRecord">
               <MappingFragment StoreEntitySet="CardRecord">
+                <ScalarProperty Name="cardTokenId" ColumnName="cardTokenId" />
                 <ScalarProperty Name="paymentTokenId" ColumnName="paymentTokenId" />
                 <ScalarProperty Name="hashNumber" ColumnName="hashNumber" />
               </MappingFragment>
