@@ -1,13 +1,13 @@
 <?php
 
-//    if(isset($_POST)){
-//        
-//        $mobilenum = $_POST['mobile_num'];
-//        $message = $_POST['message'];
+    if(isset($_POST['mobile_num']) && isset($_POST['message'])){
+        
+        $mobilenum = $_POST['mobile_num'];
+        $message = $_POST['message'];
         
         $url = 'http://203.87.236.231:8080/1/smsmessaging/outbound/42252536/requests';
 
-        $arr_post_body = array("address" => "639205246744", "message" => "Trial message");
+        $arr_post_body = array("address" => $mobilenum, "message" => $message);
 
         $options = array(
                 'http' => array(
@@ -32,6 +32,6 @@
 
 
         }
-//    }
+    }
 
 ?>
