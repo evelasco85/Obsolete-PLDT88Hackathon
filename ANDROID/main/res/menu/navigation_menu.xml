@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:id="@+id/FreeSMS"
+        android:icon="@drawable/ic_textsms_black_24dp"
+        android:title="Free SMS"></item>
+
+    <item android:id="@+id/Payment"
+        android:icon="@drawable/ic_payment_black_24dp"
+        android:title="Pay Subscription"></item>
+
+</menu>

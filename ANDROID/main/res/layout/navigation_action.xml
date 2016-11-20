@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v7.widget.Toolbar xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/colorPrimary"
+    android:id="@+id/nav_action">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:paddingEnd="15dp"
+        >
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:text="http://www.google.com/"
+            android:ems="10"
+            android:textSize="7pt"
+            android:padding="5dp"
+            android:id="@+id/urlBar"
+            android:gravity="start"
+            android:background="@drawable/urledittextselect"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_toEndOf="@+id/btnMenu" />
+
+        <Button
+            android:text=""
+            android:background="@mipmap/ic_menu_white_24dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_centerVertical="true"
+            android:layout_alignParentStart="true"
+            android:layout_marginRight="10dp"
+            android:id="@+id/btnMenu" />
+
+
+    </RelativeLayout>
+
+
+</android.support.v7.widget.Toolbar>

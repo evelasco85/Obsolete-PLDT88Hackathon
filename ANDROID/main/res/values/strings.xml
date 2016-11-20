@@ -1,0 +1,15 @@
+<resources>
+
+    <string name="app_name">PLDTBrowser</string>
+    <string name="open">Open</string>
+    <string name="close">Close</string>
+    <string name="good">Good</string>
+    <string name="bad">Bad</string>
+    <string name="average">Average</string>
+
+    <string-array name="gender_array">
+        <item>Male</item>
+        <item>Female</item>
+    </string-array>
+
+</resources>
